@@ -1,5 +1,4 @@
-Capitole du Libre 2017 : Vault, un gestionnaire de secrets qui a du coffre
-##########################################################################
+# Capitole du Libre 2017 : Vault, un gestionnaire de secrets qui a du coffre
 
 La présentation en format HTML est disponible directement à cet url : https://mcinquin.github.io/cdl2017/index.html
 
