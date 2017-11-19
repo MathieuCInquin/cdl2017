@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+
+        <title>Vault, un gestionnaire de secret qui a du coffre</title>
+
+        <meta name="description" content="Présentation rapide sur Vault et les raisons de son choix">
+        <meta name="author" content="Mathieu Cinquin">
+
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/sigfox.css" id="theme">
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+
+        <!--[if lt IE 9]>
+        <script src="lib/js/html5shiv.js"></script>
+        <![endif]-->
+    </head>
+
+    <body>
+
+        <div class="reveal">
+
+            <!-- Any section element inside of this container is displayed as a slide -->
+            <div class="slides">
+                <section data-background-image="img/rusty_keylock.jpeg">
+                    <h2>Vault, un gestionnaire de secret qui a du coffre</h2>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <p><small>Capitole du Libre 2017 - Samedi 18 octobre 2017</small></p>
+                    <p><small>Mathieu Cinquin</small></p>
+                </section>
+                <section>
+                    <h2>Sommaire</h2>
+                    <br/>
+                    <br/>
+                    <ul>
+                        <li><p class="fragment" data-fragment-index="1">Pourquoi utiliser un gestionnaire de secrets</p></li>
+                        <li><p class="fragment" data-fragment-index="2">Présentation de Vault</p></li>
+                        <li><p class="fragment" data-fragment-index="3">La sécurité</p></li>
+                        <li><p class="fragment" data-fragment-index="4">Pour aller plus loin</p></li>
+                        <li><p class="fragment" data-fragment-index="5">Petite démo (selon le verdict du chrono)</p></li>
+                        <li><p class="fragment" data-fragment-index="6">Retours d'expérience</p></li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>A Propos</h2>
+                    <br/>
+                    <br/>
+                    <p>Ingénieur Système Cloud</p>
+                    <p><img data-src="img/logo_sigfox.png" alt="Logo Sigfox" width="15%" style="background: none; border:none; box-shadow:none;"></p>
+                    <p>Contributeur à plusieurs projets Open Source<p>
+                    <p>Passionné de supervision Open Source</p>
+                </section>
+                <section>
+                    <section>
+                        <h2>Pourquoi utiliser un gestionnaire de secrets ?</h2>
+                    </section>
+                    <section>
+                        <p><img data-src="img/twitter_github_password.png" alt="Tweet Github Password" style="background: none; border:none; box-shadow:none;"</p>
+                    </section>
+                    <section>
+                        <p>Chiche, on va voir ce que cela donne sur GitHub !</p>
+                    </section>
+                    <section>
+                        <p>On commence par les clé privées SSH :</p>
+                        <a href="https://github.com/search?p=98&q=filename%3Aid_rsa+BEGIN+RSA+PRIVATE+KEY&type=Code">
+                            <img data-src="img/github_private_key.png" alt="Github private key search" width="70%" style="background: none; border:none; box-shadow:none;">
+                        </a>
+                    </section>
+                    <section>
+                        <p>Et si on regardait maintenant les commit avec "<em>remove password</em>" comme message</p>
+                        <a href="https://github.com/search?q=remove+password&type=Commits">
+                            <img data-src="img/github_remove_password.png" alt="Github remove password" width="63%" style="background: none; border:none; box-shadow:none;">
+                        </a>
+                    </section>
+                    <section>
+                        <p>Et vu que c'est un track DevOps, on va regarder pour AWS !</p>
+                        <a href="https://github.com/search?p=2&q=filename%3A.bashrc+AWS_SECRET_ACCESS_KEY&type=Code">
+                            <img data-src="img/github_aws_secret_key.png" alt="Github AWS secret access key" style="background: none; border:none; box-shadow:none;">
+                        </a>
+                    </section>
+                    <section data-background-video="img/john_cusack_speechless.mp4" data-background-video-loop data-background-video-muted>
+                    </section>
+                    <section>
+                        <p>Pour éviter les</p>
+                        <q>&ldquo;Et michel c'est quoi le mot de passe de la prod ????&rdquo;</q>
+                        <p>dans l'open space</p>
+                    </section>
+                    <section>
+                        <p>Ou encore le syndrome du passage piéton avec le <b>seul</b> gars du service qui a <b>tous</b> les mots de passe sur son pc </p>
+                    </section>
+                    <section data-background-image="img/street_crossing.gif">
+                    </section>
+                    <section>
+                        <p>Et pour terminer parce qu'on peut faire du DevOps sans faire l'impasse sur la sécurité</p>
+                        <img data-src="img/devops_vs_security.png" alt="DevOps vs Security" width="78%" style="background: none; border:none; box-shadow:none;">
+                    </section>
+                </section>
+
+                <section>
+                    <h2>Présentation de Vault</h2>
+                </section>
+
+                <section>
+                    <section>
+                        <h3>Vault</h3>
+                        <br/>
+                        <br/>
+                        <p class="fragment" data-fragment-index="7">Logiciel développé par Hashicorp (Vagrant, Consul, Packer...).</p>
+                        <br/>
+                        <p class="fragment" data-fragment-index="8">2 versions : une open-source (Mozilla Public license 2.0) et une entreprise (avec webui, HSM, replication, ...).</p>
+                        <br/>
+                        <p class="fragment" data-fragment-index="9">Sources disponibles sur <a href="https://github.com/hashicorp/vault">GitHub</a>.</p>
+                    </section>
+                    <section>
+                        <p class="fragment" data-fragment-index="10">Binaire en Go qui fait client et serveur.</p>
+                        <br/>
+                        <p class="fragment" data-fragment-index="11">Permet de stocker tout type de secrets (certficats, keystore, ...)</p>
+                        <br/>
+                        <p class="fragment" data-fragment-index="12">Possibilité d'architecture distribuée.</p>
+                        <br/>
+                        <p class="fragment" data-fragment-index="13">Toutes les communications entre l'extérieur et Vault se font en TCP (port 8200 par défaut).</p>
+                    </section>
+                    <section>
+                        <p>Tout est répertoire et fichier.</p>
+                        <br/>
+                        <pre><code class="shell" style="max-height: 100%;">
+vault mounts
+Path        Type       Accessor            Plugin  Default TTL  Max TTL  Force No Cache  Replication Behavior  Description
+cubbyhole/  cubbyhole  cubbyhole_272614c7  n/a     n/a          n/a      false           local                 per-token private secret storage
+secret/     kv         kv_1970ddd7         n/a     86400        172800   false           replicated            key/value secret storage
+sys/        system     system_f2eeae6d     n/a     n/a          n/a      false           replicated            system endpoints used for control, policy and debugging
+                        </code></pre>
+                        <pre><code>
+/vault/file/logical/3c36dfc0-b8ad-22f9-d9ec-d0e6a9a8aeda/hello # ls -alh
+total 12
+drwxr-xr-x    2 vault    vault       4.0K Nov 12 16:33 .
+drwxr-xr-x    3 vault    vault       4.0K Nov 12 16:33 ..
+-rw-------    1 vault    vault        205 Nov 12 16:33 _world
+                        </code></pre>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h3>Architecture</h3>
+                    </section>
+                    <section class="center">
+                        <img src="img/vault_archi.svg" alt="Architecture Vault" style="background: none; border:none; box-shadow:none;">
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h4>Storage Backend</h4>
+                    </section>
+                    <section>
+                        <div class="split-left">
+                            <img data-src="img/vault_archi_storage.svg" alt="Architecture Vault: Storage Backend" width="70%" style="background: none; border:none; box-shadow:none;"></p>
+                        </div>
+                        <div class="split-right">
+                            <p>Storage Backend s'occupe du stockage durable des données chiffrées.</p>
+                            <br/>
+                            <p>Plusieurs Storage Backend sont disponibles :</p>
+                            <div style="width: 50%; float: left;">
+                                <ul>
+                                    <li>Azure</li>
+                                    <li>CockroachDB</li>
+                                    <li>Consul</li>
+                                    <li>CouchDB</li>
+                                    <li>DynamoDB</li>
+                                    <li>Etcd</li>
+                                    <li>Filesystem</li>
+                                </ul>
+                            </div>
+                            <div style="width: 50%; float: right;">
+                                <ul>
+                                    <li>Google Cloud</li>
+                                    <li>In-Memory</li>
+                                    <li>MySQL</li>
+                                    <li>PostgreSQL</li>
+                                    <li>Cassandra</li>
+                                    <li>S3</li>
+                                    <li>Swift</li>
+                                    <li>Zookeeper</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                    <h4>Secret Backend</h4>
+                </section>
+                    <section>
+                        <div class="split-left">
+                            <img data-src="img/vault_archi_secret.svg" alt="Architecture Vault: Secret Backend" width="70%" style="background: none; border:none; box-shadow:none;">
+                        </div>
+                        <div class="split-right">
+                            <p>Secret Backend a en charge de la génération des différents types de secret.</p>
+                            <br/>
+                            <p>Plusieurs Secret Backend sont disponibles :</p>
+                            <div style="width: 50%; float: left;">
+                                <ul>
+                                    <li>AWS</li>
+                                    <li>Consul</li>
+                                    <li>Cubbyhole</li>
+                                    <li>Databases</li>
+                                    <li>Key/Value</li>
+                                </ul>
+                            </div>
+                            <div style="width: 50%; float: right;">
+                                <ul>
+                                    <li>Identity</li>
+                                    <li>PKI</li>
+                                    <li>RabbitMQ</li>
+                                    <li>SSH</li>
+                                    <li>TOTP</li>
+                                    <li>Transit</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h4>Auth Backend</h4>
+                    </section>
+                    <section>
+                        <div class="split-left">
+                            <img data-src="img/vault_archi_auth.svg" alt="Architecture Vault: Auth Backend" width="70%" style="background: none; border:none; box-shadow:none;">
+                        </div>
+                        <div class="split-right">
+                            <p>Auth Backend s'occupe d'authentifier l'utilisateur qui veut interagir avec Vault et de lui assigner ses permissions.</p>
+                            <br/>
+                            <p>Plusieurs Auth Backend sont disponibles :</p>
+                            <div style="width: 50%; float: left;">
+                                <ul>
+                                    <li>AppRole</li>
+                                    <li>AWS</li>
+                                    <li>Google Cloud</li>
+                                    <li>Kubernetes</li>
+                                    <li>GitHub</li>
+                                    <li>LDAP</li>
+                                </ul>
+                            </div>
+                            <div style="width: 50%; float: right;">
+                                <ul>
+                                    <li>MFA</li>
+                                    <li>Okta</li>
+                                    <li>RADIUS</li>
+                                    <li>TLS Certificates</li>
+                                    <li>Tokens</li>
+                                    <li>Username & Password</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h4>Audit Backend</h4>
+                    </section>
+                    <section>
+                        <div class="split-left">
+                            <img data-src="img/vault_archi_audit.svg" alt="Architecture Vault: Audit Backend" width="70%" style="background: none; border:none; box-shadow:none;">
+                        </div>
+                        <div class="split-right">
+                            <p>Audit backend a en charge la gestion des logs de Vault.</p>
+                            <br/>
+                            <p style="float: left;">Plusieurs Audit Backend sont disponibles :</p>
+                            <div style="float: left;">
+                                <ul>
+                                    <li style="float: left; padding-right: 80px;">File</li>
+                                    <li style="float: left; padding-right: 80px;">Syslog</li>
+                                    <li style="float: left; padding-right: 80px;">Socket</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h4>Barrier</h4>
+                    </section>
+                    <section>
+                        <div class="split-left">
+                            <img data-src="img/vault_archi_barrier.svg" alt="Architecture Vault: Barrier" width="70%" style="background: none; border:none; box-shadow:none;">
+                        </div>
+                        <div class="split-right">
+                            <p>Barrier est l'élémént qui se trouve au milieu des échanges de données entre le Storage Backend et Vault.</p>
+                            <p>Il garantit que seules des données chiffrées peuvent être écrites à l'extérieur de Vault.</p>
+                            <p>Dans l'autre sens, il s'occupe de vérifier et déchiffrer à la volée les données qu'il va récupérer.</p>
+                            <p>Barrier englobe tous les éléments de Vault sauf le Storage Backend et HTTP API.</p>
+                        </div>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h4>Token Store</h4>
+                    </section>
+                    <section>
+                        <div class="split-left">
+                            <img data-src="img/vault_archi_token.svg" alt="Architecture Vault: Token" width="70%" style="background: none; border:none; box-shadow:none;">
+                        </div>
+                        <div class="split-right">
+                            <p>Token Store s'occupe de fournir à un client identifié un token pour communiquer avec Vault.</p>
+                            <br/>
+                            <p>Le token est à la base de tout le processus d'authentification dans Vault.</p>
+                        </div>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h4>Policy Store</h4>
+                    </section>
+                    <section>
+                        <div class="split-left">
+                            <img data-src="img/vault_archi_policy.svg" alt="Architecture Vault: Policy" width="70%" style="background: none; border:none; box-shadow:none;">
+                        </div>
+                        <div class="split-right">
+                            <p>Policy Store contient les permissions d'utilisation du Secret Backend.</p>
+                            <br/>
+                            <p>Il envoie ses informations à Token Store afin de les lier au token fourni.</p>
+                        </div>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h4>Core</h4>
+                    </section>
+                    <section>
+                        <div class="split-left">
+                            <img data-src="img/vault_archi_core.svg" alt="Architecture Vault: Core" width="70%" style="background: none; border:none; box-shadow:none;">
+                        </div>
+                        <div class="split-right">
+                            <p>Core est l'élément central qui va faire communiquer et travailler ensemble tous les autres composants.</p>
+                            <br/>
+                            <p>Il s'occupe entre autre :</p>
+                            <div style="width: 50%; float: left;">
+                                <ul>
+                                    <li>d'appliquer une durée de vie au secre ;</li>
+                                    <li>d'en vérifier la péremption ;</li>
+                                    <li>de révoquer un secret ;</li>
+                                </ul>
+                            </div>
+                            <div style="width: 50%; float: right;">
+                                <ul>
+                                    <li>d'envoyer toutes les actions à l'Audit Backend ;</li>
+                                    <li>de gérer une certaine résilience avec un système de rollback.</li>
+                                </ul>
+                            </div>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h4>HTTP API</h4>
+                    </section>
+                    <section class="center">
+                        <div class="split-left">
+                            <img data-src="img/vault_archi_api.svg" alt="Architecture Vault: HTTP API" width="70%" style="background: none; border:none; box-shadow:none;">
+                        </div>
+                        <div class="split-right">
+                            <p>HTTP API est l'élément qui permet à un utilisateur de communiquer avec Vault.</p>
+                            <br/>
+                            <p>La communication entre le serveur et le monde extérieur (donc le client) se fait par HTTP(S).</p>
+                            <br/>
+                            <pre><code class="shell" style="max-height: 100%;">
+Error reading mounts: Error making API request.
+
+URL: GET http://127.0.0.1:8200/v1/sys/mounts
+Code: 503. Errors:
+
+* Vault is sealed
+                            </code></pre>
+                    </section>
+                </section>
+
+                <section>
+                    <h2>Sécurité</h2>
+                </section>
+
+                <section>
+                    <section>
+                        <h3>Le scellement</h3>
+                    </section>
+                    <section class="center">
+                        <img data-src="img/vault_bank.jpg" alt="Bank Vault Door" width="50%" style="background: none; border:none; box-shadow:none;">
+                        <p>Analogie avec un coffre de banque où on doit franchir la porte blindée.</p>
+                    </section>
+                    <section class="center">
+                        <p>Par défaut, Vault est scellé. Il est nécessaire de l'ouvrir afin de pouvoir accéder aux secrets.</p>
+                        <img data-src="img/vault_shamir_secret.svg" alt="Vault Shamir Secret" width="20%" style="background: none; border:none; box-shadow:none;">
+                        <br/>
+                        <br/>
+                        <p class="fragment current-visible"  data-fragment-index="14">Création d'une clé de chiffrement à la 1ère initialisation de Vault.</p>
+                        <p class="fragment current-visible"  data-fragment-index="15">Cette clé de chiffrement est protégée par une clé maître.</p>
+                        <p class="fragment current-visible"  data-fragment-index="16">La clé maître est ensuite scindée plusieurs clés partagées (<a href="https://en.wikipedia.org/wiki/Shamir's_Secret_Sharing">Shamir's secret sharing algorithm</a>).</p>
+                        <p class="fragment current-visible"  data-fragment-index="17">Il faut X (3 par défaut) de ces clés partagées pour desceller Vault.</p>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h3>Le chiffrement</h3>
+                    </section>
+                    <section>
+                        <p>Toutes les données qui sortent de Barrier sont chiffrées en <a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard"> 256-bit AES</a> avec le mode <a href="https://en.wikipedia.org/wiki/Galois/Counter_Mode">GCM</a>.</p>
+                        <br/>
+                        <p>Il n'y a aucune confiance entre le monde extérieur (même le client) et le serveur. Il est donc nécessaire de mettre en place du <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">TLS</a> par dessus HTTP.</p>
+                        <br/>
+                        <pre><code class="shell" style="max-height: 100%;">
+/vault/file/logical/3c36dfc0-b8ad-22f9-d9ec-d0e6a9a8aeda/hello # cat _world
+{"Key":"logical/3c36dfc0-b8ad-22f9-d9ec-d0e6a9a8aeda/hello/world","Value":"AAAAAQKJ+ROyUkvPxSFXM0B5m0MrcrjKI3DSDA/3clKnhHLYlsKZ76cxPOU7SkCwHg=="}
+                        </code></pre>
+                    </section>
+                </section>
+                <section>
+                    <section>
+                        <h3>Les permissions</h3>
+                    </section>
+                    <section>
+                        <p>Tout utilisateur n'ayant pas de permissions associées se voit tout refuser.<p>
+                        <br />
+                        <p>Les permissions décrivent quelles actions sont possibles sur un répertoire (Tout est fichier et répertoire dans Vault).</p>
+                        <br />
+                        <p>Les permissions sont écrites en <a href="https://github.com/hashicorp/hcl">HCL (HashiCorp Configuration Language)</a> ou en JSON.</p>
+                    </section>
+                    <section>
+                        <p>Petit exemple d'un fichier de permissions</p>
+                        <pre><code class="python" style="max-height: 100%;">
+# This section grants all access on "secret/*". Further restrictions can be
+# applied to this broad policy, as shown below.
+path "secret/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+# Even though we allowed secret/*, this line explicitly denies
+# secret/super-secret. This takes precedence.
+path "secret/super-secret" {
+  capabilities = ["deny"]
+}
+
+# Policies can also specify allowed and disallowed parameters. Here the key
+# "secret/restricted" can only contain "foo" (any value) and "bar" (one of "zip"
+# or "zap").
+path "secret/restricted" {
+  capabilities = ["create"]
+  allowed_parameters = {
+    "foo" = []
+    "bar" = ["zip", "zap"]
+  }
+}
+                        </code></pre>
+                    </section>
+                    <section>
+                        <p>Les permissions peuvent être appliquées à <b>0</b> ou <b>n</b> utilisateurs</p>
+                        <br/>
+                        <p>Un utilisateur peut avoir <b>plusieurs</b> permissions qui lui sont associées</p>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h3>Les "leases"</h3>
+                    </section>
+                    <section>
+                        <p>Tout a une durée de vie dans Vault, les secrets et les tokens</p>
+                        <br/>
+                        <p>Possibilité de révoquer avant l'heure ou de renouveller la durée de vie</p>
+                        <br/>
+                        <p>Oblige l'utilisateur à régulièrement vérifier ses données. Vault n'avertit pas: <b>aucune de notifications !</b></p>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Une démo ! Une démo ! Une démo !<h2>
+                    </section>
+                    <section data-background-video="img/garcimore.mp4" data-background-video-loop data-background-video-muted>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Pour aller plus loin</h2>
+                    </section>
+                    <section>
+                        <p>Une grande liste de librairies disponibles :</p>
+                        <br/>
+                        <div class="split-left">
+                            <ul>
+                                <li>Go</li>
+                                <li>Ruby</li>
+                                <li>C#</li>
+                                <li>Clojure</li>
+                                <li>Elixir</li>
+                                <li>Haskell</li>
+                                <li>Java</li>
+                            </ul>
+                        </div>
+                        <div class="split-right">
+                            <ul>
+                                <li>Kotlin</li>
+                                <li>Node.js</li>
+                                <li>PHP</li>
+                                <li>Powerhsell</li>
+                                <li>Python</li>
+                                <li>Rust</li>
+                                <li>Scala</li>
+                        <div>
+                    </section>
+                    <section>
+                        <p>Et surtout l'intégration avec des outils de déploiement et de configuration :</p>
+                        <br/>
+                        <ul>
+                            <li>Ansible <3</li>
+                            <li>Chef</li>
+                            <li>Puppet</li>
+                            <li>Salt</li>
+                    </section>
+                    <section>
+                        <p>Petit exemple avec Ansible</p>
+                        <pre><code class="yaml" style="max-height: 100%;">
+# templates/example.j2
+
+# Generic secrets
+{{ lookup('vault', 'secret/hello').value }} # world
+# Generic secrets with parameters
+{{ lookup('vault', 'pki/issue/example-dot-com common_name=foo.example.com format=pem_bundle').certificate }}
+# Specify field inside lookup
+{{ lookup('vault', 'secret/hello', 'value') }} # world
+
+# Dynamic secrets
+{% set aws = lookup('vault', 'aws/creds/deploy') %}
+access_key = {{ aws.access_key }}
+secret_key = {{ aws.secret_key }}
+                        </code></pre>
+                    </section>
+                    <section>
+                        <p>Plusieurs interfaces web opensource sont disponibles dont :</p>
+                        <br/>
+                        <div class="split-left">
+                            <p><a href="https://github.com/djenriquez/vault-ui">djenriquez/vault-ui</a></p>
+                            <img data-src="img/djenriquez_vault-ui.gif" alt="vault-ui" width="80%" style="background: none; border:none; box-shadow:none;">
+                        </div>
+                        <div class=split-left">
+                            <p><a href="https://github.com/Caiyeon/goldfish">Caiyeon/goldfish</a></p>
+                            <img data-src="img/goldfish.png" alt="Goldfish" width="50%" style="background: none; border:none; box-shadow:none;">
+                        </div>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Retours d'expérience</h2>
+                    </section>
+                    <section>
+                        <div class="split-left">
+                            <h4>Avantages</h4>
+                            <p>Aucun problème rencontré en 9 mois d'utilisation</p>
+                            <p>Très bonne intégration avec Ansible</p>
+                            <p>Tout est fichier et répertoire (facilité de sauvegarde)</p>
+                            <p>A même plu aux devs !!!</p>
+                        </div>
+                        <div class="split-right">
+                            <h4>Inconvénients</h4>
+                            <p>Documentation pas claire du tout</p>
+                            <p>Les leases, les leases, les leases...</p>
+                            <p>Tout est fichier et répertoire (attention à l'organisation et la hierarchie des secrets)</p>
+                            <p class="fragment highlight-red">Le support et la partie commerciale sont à éviter</p>
+                        </div>
+                    </section>
+                </section>
+                <section>
+                    <p>Et voilà !</p>
+                    <br/>
+                    <br/>
+                    <p>Merci de votre présence et de votre attention</p>
+                </section>
+                <section data-background-image="img/shrug-house.gif">
+                    <h1>Des questions ?</h1>
+                <section>
+            </div>
+
+        </div>
+
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.js"></script>
+
+    <script>
+
+            // More info https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                controls: true,
+                progress: true,
+                history: true,
+                center: true,
+                //width: 1024,
+                //height: 768,
+                width: "100%",
+                height: "100%",
+                margin: 0.1,
+                minScale: 1,
+                maxScale: 1,
+                previewLinks: true,
+
+                transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+                // More info https://github.com/hakimel/reveal.js#dependencies
+                dependencies: [
+                    { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+                    { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/zoom-js/zoom.js', async: true },
+                    { src: 'plugin/notes/notes.js', async: true }
+                ]
+            });
+
+        </script>
+
+    </body>
+</html>

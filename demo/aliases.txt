@@ -1,0 +1,32 @@
+#Alias
+alias vault='docker exec -it vault_server vault "$@"'
+export VAULT_ADDR=http:http//127.0.0.1:8200
+
+#Init
+vault init
+
+#Unseal
+vault unseal
+
+#Auth
+vault auth
+
+#Create secret
+vault write secret/test/foo value="bar"
+
+#Create policies
+vault policy-write test-policy /vault/policies/test-policy.hcl
+
+#Create role
+vault write auth/token/roles/test-role allowed_policies="test-policy" ttl="0" renewable="false"
+
+#Create user
+vault token-create -display-name="mcinquin" -role="mcinquin"
+
+#Auth
+
+#Create secret
+vault write secret/test/test value="test"
+
+#Audit
+vault audit-enable file file_path=/vault/logs/audit.log
