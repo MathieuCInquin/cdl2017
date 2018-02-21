@@ -1,6 +1,6 @@
 #Alias
 alias vault='docker exec -it vault_server vault "$@"'
-export VAULT_ADDR=http:http//127.0.0.1:8200
+export VAULT_ADDR=http://127.0.0.1:8200
 
 #Init
 vault init
@@ -9,7 +9,7 @@ vault init
 vault unseal
 
 #Auth
-vault auth
+vault login
 
 #Create secret
 vault write secret/test/foo value="bar"
@@ -24,6 +24,7 @@ vault write auth/token/roles/test-role allowed_policies="test-policy" ttl="0" re
 vault token-create -display-name="mcinquin" -role="mcinquin"
 
 #Auth
+vault login
 
 #Create secret
 vault write secret/test/test value="test"
